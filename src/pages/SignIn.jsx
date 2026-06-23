@@ -19,8 +19,11 @@ function SignIn() {
         body: JSON.stringify({ phoneNumber, pin }),
       });
       const data = await res.json();
-      if (data.status === "success") navigate("/dashboard");
-      else setError(data.message || "Something went wrong");
+if (data.status === "success") {
+        localStorage.setItem("pesasmart_user", JSON.stringify(data.user));
+        navigate("/dashboard");
+      }
+            else setError(data.message || "Something went wrong");
     } catch {
       setError("Could not reach the server");
     }
