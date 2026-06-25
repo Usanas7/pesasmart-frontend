@@ -14,17 +14,21 @@ function GroupDetail() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [disputes, setDisputes] = useState([]);
 
   async function loadData() {
     try {
-      const [gRes, mRes] = await Promise.all([
+      const [gRes, mRes, dRes] = await Promise.all([
         fetch(`${API}/api/groups/${groupId}`),
         fetch(`${API}/api/groups/${groupId}/members`),
+        fetch(`${API}/api/groups/${groupId}/disputes`),
       ]);
       const gData = await gRes.json();
       const mData = await mRes.json();
+      const dData = await dRes.json();
       if (gData.status === "success") setGroup(gData.group);
       if (mData.status === "success") setMembers(mData.members);
+      if (dData.status === "success") setDisputes(dData.disputes);
     } catch {
       setError("Could not load the group");
     }
@@ -73,6 +77,22 @@ async function toggleContribution(member) {
       } else {
         setError(data.message || "Could not update contribution");
       }
+    } catch {
+      setError("Could not reach the server");
+    }
+  }
+
+async function resolveDispute(dispute) {
+    const newStatus = dispute.status === "resolved" ? "open" : "resolved";
+    try {
+      const res = await fetch(`${API}/api/disputes/${dispute.dispute_id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const data = await res.json();
+      if (data.status === "success") loadData();
+      else setError(data.message || "Could not update dispute");
     } catch {
       setError("Could not reach the server");
     }
@@ -137,6 +157,29 @@ async function toggleContribution(member) {
           </ul>
         )}
       </section>
+
+<section className="panel" style={{ marginTop: "24px" }}>
+        <h3>Disputes</h3>
+        {disputes.length === 0 ? (
+          <p className="subtitle">No disputes raised.</p>
+        ) : (
+          <ul className="group-list">
+            {disputes.map((d) => (
+              <li key={d.dispute_id}>
+                <span>Week {d.disputed_week} — {d.full_name} ({d.phone_number})</span>
+                <button
+                  type="button"
+                  className={d.status === "resolved" ? "status-btn paid" : "status-btn pending"}
+                  onClick={() => resolveDispute(d)}
+                >
+                  {d.status === "resolved" ? "Resolved ✓" : "Mark resolved"}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
     </div>
   );
 }
