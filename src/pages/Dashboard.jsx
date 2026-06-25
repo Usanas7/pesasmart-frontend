@@ -13,6 +13,7 @@ function Dashboard() {
   const [cycleLength, setCycleLength] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [startDate, setStartDate] = useState("");
 
   async function loadGroups() {
     if (!user) return;
@@ -43,6 +44,7 @@ function Dashboard() {
           contributionAmount,
           frequency,
           cycleLength,
+          startDate,
           createdBy: user.user_id,
         }),
       });
@@ -99,6 +101,8 @@ function Dashboard() {
           </select>
           <label>Cycle length (number of members / rounds)</label>
           <input type="number" value={cycleLength} onChange={(e) => setCycleLength(e.target.value)} placeholder="10" required />
+          <label>Start date (first payout date)</label>
+          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
           <button type="submit" disabled={loading}>{loading ? "Creating..." : "Create Group"}</button>
         </form>
       </section>
