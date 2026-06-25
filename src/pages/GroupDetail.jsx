@@ -15,20 +15,24 @@ function GroupDetail() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [disputes, setDisputes] = useState([]);
+  const [changes, setChanges] = useState([]);
 
-  async function loadData() {
+async function loadData() {
     try {
-      const [gRes, mRes, dRes] = await Promise.all([
+      const [gRes, mRes, dRes, cRes] = await Promise.all([
         fetch(`${API}/api/groups/${groupId}`),
         fetch(`${API}/api/groups/${groupId}/members`),
         fetch(`${API}/api/groups/${groupId}/disputes`),
+        fetch(`${API}/api/groups/${groupId}/changes`),
       ]);
       const gData = await gRes.json();
       const mData = await mRes.json();
       const dData = await dRes.json();
+      const cData = await cRes.json();
       if (gData.status === "success") setGroup(gData.group);
       if (mData.status === "success") setMembers(mData.members);
       if (dData.status === "success") setDisputes(dData.disputes);
+      if (cData.status === "success") setChanges(cData.changes);
     } catch {
       setError("Could not load the group");
     }
@@ -93,6 +97,21 @@ async function resolveDispute(dispute) {
       const data = await res.json();
       if (data.status === "success") loadData();
       else setError(data.message || "Could not update dispute");
+    } catch {
+      setError("Could not reach the server");
+    }
+  }
+
+async function decideChange(change, decision) {
+    try {
+      const res = await fetch(`${API}/api/changes/${change.change_id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ decision }),
+      });
+      const data = await res.json();
+      if (data.status === "success") loadData();
+      else setError(data.message || "Could not update the request");
     } catch {
       setError("Could not reach the server");
     }
@@ -174,6 +193,33 @@ async function resolveDispute(dispute) {
                 >
                   {d.status === "resolved" ? "Resolved ✓" : "Mark resolved"}
                 </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+<section className="panel" style={{ marginTop: "24px" }}>
+        <h3>Membership requests</h3>
+        {changes.length === 0 ? (
+          <p className="subtitle">No membership change requests.</p>
+        ) : (
+          <ul className="group-list">
+            {changes.map((c) => (
+              <li key={c.change_id}>
+                <span>
+                  {c.change_type === "exit"
+                    ? `Exit request — ${c.full_name}`
+                    : `Phone update — ${c.full_name} → ${c.details}`}
+                </span>
+                {c.status === "pending" ? (
+                  <span style={{ display: "flex", gap: "8px" }}>
+                    <button type="button" className="status-btn paid" onClick={() => decideChange(c, "approved")}>Approve</button>
+                    <button type="button" className="status-btn pending" onClick={() => decideChange(c, "rejected")}>Reject</button>
+                  </span>
+                ) : (
+                  <span className="badge">{c.status}</span>
+                )}
               </li>
             ))}
           </ul>
