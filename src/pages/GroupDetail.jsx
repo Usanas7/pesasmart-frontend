@@ -59,6 +59,25 @@ function GroupDetail() {
     setLoading(false);
   }
 
+async function toggleContribution(member) {
+    const newStatus = member.contribution_status === "paid" ? "pending" : "paid";
+    try {
+      const res = await fetch(`${API}/api/members/${member.member_id}/contribution`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const data = await res.json();
+      if (data.status === "success") {
+        loadData();
+      } else {
+        setError(data.message || "Could not update contribution");
+      }
+    } catch {
+      setError("Could not reach the server");
+    }
+  }
+
   if (!user) {
     return (
       <div className="card">
@@ -106,7 +125,13 @@ function GroupDetail() {
             {members.map((m) => (
               <li key={m.member_id}>
                 <span>{m.rotation_order}. {m.full_name} ({m.phone_number})</span>
-                <span className="badge">{m.contribution_status}</span>
+                <button
+                  type="button"
+                  className={m.contribution_status === "paid" ? "status-btn paid" : "status-btn pending"}
+                  onClick={() => toggleContribution(m)}
+                >
+                  {m.contribution_status === "paid" ? "Paid ✓" : "Mark paid"}
+                </button>
               </li>
             ))}
           </ul>
