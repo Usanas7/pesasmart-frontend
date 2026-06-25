@@ -33,3 +33,5 @@ button:hover { background: #244a72; }
 .group-list li:last-child { border-bottom: none; }
 .badge { background: #dcfce7; color: #166534; font-size: 12px; padding: 3px 10px; border-radius: 999px; }
 .error { color: #b91c1c; background: #fee2e2; padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-bottom: 14px; }
+.manage-link { color: #2E5A88; text-decoration: none; font-weight: 600; font-size: 14px; }
+.manage-link:hover { text-decoration: underline; } }
