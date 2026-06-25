@@ -112,7 +112,7 @@ function Dashboard() {
             {groups.map((g) => (
               <li key={g.group_id}>
                 <span>{g.name} — {g.contribution_amount} RWF / {g.frequency}</span>
-                <span className="badge">{g.cycle_length} rounds</span>
+                <Link to={`/groups/${g.group_id}`} className="manage-link">Manage →</Link>
               </li>
             ))}
           </ul>
