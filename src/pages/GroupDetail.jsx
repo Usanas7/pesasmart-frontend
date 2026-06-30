@@ -16,6 +16,8 @@ function GroupDetail() {
   const [loading, setLoading] = useState(false);
   const [disputes, setDisputes] = useState([]);
   const [changes, setChanges] = useState([]);
+  const [broadcast, setBroadcast] = useState("");
+  const [broadcastMsg, setBroadcastMsg] = useState("");
 
 async function loadData() {
     try {
@@ -112,6 +114,28 @@ async function decideChange(change, decision) {
       const data = await res.json();
       if (data.status === "success") loadData();
       else setError(data.message || "Could not update the request");
+    } catch {
+      setError("Could not reach the server");
+    }
+  }
+
+async function sendBroadcast(e) {
+    e.preventDefault();
+    setBroadcastMsg("");
+    setError("");
+    try {
+      const res = await fetch(`${API}/api/groups/${groupId}/broadcast`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: broadcast }),
+      });
+      const data = await res.json();
+      if (data.status === "success") {
+        setBroadcast("");
+        setBroadcastMsg(`Message sent to ${data.sentTo} member(s).`);
+      } else {
+        setError(data.message || "Could not send the message");
+      }
     } catch {
       setError("Could not reach the server");
     }
@@ -224,6 +248,22 @@ async function decideChange(change, decision) {
             ))}
           </ul>
         )}
+      </section>
+
+<section className="panel" style={{ marginTop: "24px" }}>
+        <h3>Send a group message (SMS)</h3>
+        {broadcastMsg && <p className="success-msg">{broadcastMsg}</p>}
+        <form onSubmit={sendBroadcast}>
+          <label>Message to all active members</label>
+          <textarea
+            value={broadcast}
+            onChange={(e) => setBroadcast(e.target.value)}
+            placeholder="Reminder: contributions for this week are due on Friday."
+            rows={3}
+            required
+          />
+          <button type="submit">Send SMS</button>
+        </form>
       </section>
 
     </div>
