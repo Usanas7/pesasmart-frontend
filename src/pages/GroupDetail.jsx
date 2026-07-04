@@ -209,7 +209,7 @@ async function sendBroadcast(e) {
           <ul className="group-list">
             {disputes.map((d) => (
               <li key={d.dispute_id}>
-                <span>Week {d.disputed_week} — {d.full_name} ({d.phone_number})</span>
+                <span>REF#{String(d.dispute_id).padStart(4, "0")} · Week {d.disputed_week} — {d.full_name}{d.momo_txid ? ` · TxID: ${d.momo_txid}` : ""}</span>
                 <button
                   type="button"
                   className={d.status === "resolved" ? "status-btn paid" : "status-btn pending"}
