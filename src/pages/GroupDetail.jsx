@@ -243,7 +243,7 @@ async function sendBroadcast(e) {
                   </span>
 ) : (
                   <span className={c.status === "approved" ? "status-btn paid" : "status-btn pending"}>
-                    {c.status === "approved" ? "Approved ✓" : "Rejected ✗"}
+                    {c.status === "approved" ? "Approved " : "Rejected "}
                   </span>
                 )}
               </li>
