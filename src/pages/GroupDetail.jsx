@@ -241,8 +241,10 @@ async function sendBroadcast(e) {
                     <button type="button" className="status-btn paid" onClick={() => decideChange(c, "approved")}>Approve</button>
                     <button type="button" className="status-btn pending" onClick={() => decideChange(c, "rejected")}>Reject</button>
                   </span>
-                ) : (
-                  <span className="badge">{c.status}</span>
+) : (
+                  <span className={c.status === "approved" ? "status-btn paid" : "status-btn pending"}>
+                    {c.status === "approved" ? "Approved ✓" : "Rejected ✗"}
+                  </span>
                 )}
               </li>
             ))}
