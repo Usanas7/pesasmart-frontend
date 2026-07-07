@@ -79,11 +79,22 @@ function GroupDetail() {
         body: JSON.stringify({ status: newStatus }),
       });
       const data = await res.json();
-      if (data.status === "success") {
-        loadData();
-      } else {
-        setError(data.message || "Could not update contribution");
-      }
+      if (data.status === "success") loadData();
+      else setError(data.message || "Could not update contribution");
+    } catch {
+      setError("Could not reach the server");
+    }
+  }
+
+  async function togglePayout(member) {
+    try {
+      const res = await apiFetch(`/api/members/${member.member_id}/payout`, {
+        method: "PATCH",
+        body: JSON.stringify({ received: !member.payout_received }),
+      });
+      const data = await res.json();
+      if (data.status === "success") loadData();
+      else setError(data.message || "Could not update payout");
     } catch {
       setError("Could not reach the server");
     }
@@ -160,8 +171,8 @@ function GroupDetail() {
 
       <div className="stat-cards">
         <div className="stat-card">
-          <span className="stat-number">{members.length}</span>
-          <span className="stat-label">Members</span>
+          <span className="stat-number">{members.filter((m) => m.status !== "inactive").length}</span>
+          <span className="stat-label">Active members</span>
         </div>
       </div>
 
@@ -188,15 +199,25 @@ function GroupDetail() {
                 <span>
                   {m.rotation_order}. {m.full_name} ({m.phone_number})
                   {m.status === "inactive" && <span className="badge" style={{ marginLeft: "8px" }}>exited</span>}
+                  {m.payout_received && <span className="badge" style={{ marginLeft: "8px" }}>paid out</span>}
                 </span>
                 {m.status !== "inactive" && (
-                  <button
-                    type="button"
-                    className={m.contribution_status === "paid" ? "status-btn paid" : "status-btn pending"}
-                    onClick={() => toggleContribution(m)}
-                  >
-                    {m.contribution_status === "paid" ? "Paid ✓" : "Mark paid"}
-                  </button>
+                  <span style={{ display: "flex", gap: "8px" }}>
+                    <button
+                      type="button"
+                      className={m.contribution_status === "paid" ? "status-btn paid" : "status-btn pending"}
+                      onClick={() => toggleContribution(m)}
+                    >
+                      {m.contribution_status === "paid" ? "Paid" : "Mark paid"}
+                    </button>
+                    <button
+                      type="button"
+                      className={m.payout_received ? "status-btn paid" : "status-btn pending"}
+                      onClick={() => togglePayout(m)}
+                    >
+                      {m.payout_received ? "Payout done" : "Mark paid out"}
+                    </button>
+                  </span>
                 )}
               </li>
             ))}
@@ -218,7 +239,7 @@ function GroupDetail() {
                   className={d.status === "resolved" ? "status-btn paid" : "status-btn pending"}
                   onClick={() => resolveDispute(d)}
                 >
-                  {d.status === "resolved" ? "Resolved ✓" : "Mark resolved"}
+                  {d.status === "resolved" ? "Resolved" : "Mark resolved"}
                 </button>
               </li>
             ))}
@@ -239,14 +260,15 @@ function GroupDetail() {
                     ? `Exit request — ${c.full_name}`
                     : `Phone update — ${c.full_name} → ${c.details}`}
                 </span>
-                {c.status === "pending" ? (
+                {c.status === "approved" ? (
+                  <span className="status-btn paid">Approved</span>
+                ) : (
                   <span style={{ display: "flex", gap: "8px" }}>
                     <button type="button" className="status-btn paid" onClick={() => decideChange(c, "approved")}>Approve</button>
-                    <button type="button" className="status-btn pending" onClick={() => decideChange(c, "rejected")}>Reject</button>
-                  </span>
-                ) : (
-                  <span className={c.status === "approved" ? "status-btn paid" : "status-btn pending"}>
-                    {c.status === "approved" ? "Approved ✓" : "Rejected ✗"}
+                    {c.status !== "rejected" && (
+                      <button type="button" className="status-btn pending" onClick={() => decideChange(c, "rejected")}>Reject</button>
+                    )}
+                    {c.status === "rejected" && <span className="badge">Rejected</span>}
                   </span>
                 )}
               </li>
