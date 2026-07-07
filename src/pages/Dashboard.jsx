@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-const API = import.meta.env.VITE_API_URL;
+import { apiFetch } from "../api";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ function Dashboard() {
   async function loadGroups() {
     if (!user) return;
     try {
-      const res = await fetch(`${API}/api/groups?createdBy=${user.user_id}`);
+      const res = await apiFetch(`/api/groups?createdBy=${user.user_id}`);
       const data = await res.json();
       if (data.status === "success") setGroups(data.groups);
     } catch {
@@ -31,14 +31,25 @@ function Dashboard() {
     // eslint-disable-next-line
   }, []);
 
+  function handleLogout() {
+    localStorage.removeItem("pesasmart_user");
+    localStorage.removeItem("pesasmart_token");
+    navigate("/");
+  }
+
   async function handleCreate(e) {
     e.preventDefault();
     setError("");
+
+    if (!name.trim()) { setError("Group name is required"); return; }
+    if (isNaN(contributionAmount) || Number(contributionAmount) <= 0) { setError("Enter a valid contribution amount"); return; }
+    if (isNaN(cycleLength) || Number(cycleLength) < 1) { setError("Enter a valid cycle length"); return; }
+    if (!startDate) { setError("Please choose a start date"); return; }
+
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/groups`, {
+      const res = await apiFetch(`/api/groups`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
           contributionAmount,
@@ -54,6 +65,7 @@ function Dashboard() {
         setContributionAmount("");
         setCycleLength("");
         setFrequency("Weekly");
+        setStartDate("");
         loadGroups();
       } else {
         setError(data.message || "Could not create the group");
@@ -76,7 +88,10 @@ function Dashboard() {
 
   return (
     <div className="dashboard">
-      <h2>Dashboard</h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h2>Dashboard</h2>
+        <button type="button" className="logout-btn" onClick={handleLogout}>Log out</button>
+      </div>
       <p className="subtitle">Welcome, {user.full_name} — manage your Ikimina groups</p>
 
       <div className="stat-cards">

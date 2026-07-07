@@ -41,3 +41,5 @@ button:hover { background: #244a72; }
 .status-btn:hover { opacity: 0.85; }
 textarea { padding: 10px 12px; margin-bottom: 16px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: inherit; resize: vertical; }
 .success-msg { color: #166534; background: #dcfce7; padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-bottom: 14px; }
+.logout-btn { width: auto; background: #fff; color: #2E5A88; border: 1px solid #2E5A88; padding: 6px 14px; font-size: 13px; border-radius: 6px; cursor: pointer; }
+.logout-btn:hover { background: #f0f4f8; }

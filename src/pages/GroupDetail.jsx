@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-
-const API = import.meta.env.VITE_API_URL;
+import { apiFetch } from "../api";
 
 function GroupDetail() {
   const { groupId } = useParams();
@@ -19,13 +18,13 @@ function GroupDetail() {
   const [broadcast, setBroadcast] = useState("");
   const [broadcastMsg, setBroadcastMsg] = useState("");
 
-async function loadData() {
+  async function loadData() {
     try {
       const [gRes, mRes, dRes, cRes] = await Promise.all([
-        fetch(`${API}/api/groups/${groupId}`),
-        fetch(`${API}/api/groups/${groupId}/members`),
-        fetch(`${API}/api/groups/${groupId}/disputes`),
-        fetch(`${API}/api/groups/${groupId}/changes`),
+        apiFetch(`/api/groups/${groupId}`),
+        apiFetch(`/api/groups/${groupId}/members`),
+        apiFetch(`/api/groups/${groupId}/disputes`),
+        apiFetch(`/api/groups/${groupId}/changes`),
       ]);
       const gData = await gRes.json();
       const mData = await mRes.json();
@@ -48,11 +47,14 @@ async function loadData() {
   async function handleAddMember(e) {
     e.preventDefault();
     setError("");
+
+    if (!fullName.trim()) { setError("Member name is required"); return; }
+    if (!/^\d{9,15}$/.test(phoneNumber.replace(/\D/g, ""))) { setError("Enter a valid phone number"); return; }
+
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/groups/${groupId}/members`, {
+      const res = await apiFetch(`/api/groups/${groupId}/members`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fullName, phoneNumber }),
       });
       const data = await res.json();
@@ -69,12 +71,11 @@ async function loadData() {
     setLoading(false);
   }
 
-async function toggleContribution(member) {
+  async function toggleContribution(member) {
     const newStatus = member.contribution_status === "paid" ? "pending" : "paid";
     try {
-      const res = await fetch(`${API}/api/members/${member.member_id}/contribution`, {
+      const res = await apiFetch(`/api/members/${member.member_id}/contribution`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
       const data = await res.json();
@@ -88,12 +89,11 @@ async function toggleContribution(member) {
     }
   }
 
-async function resolveDispute(dispute) {
+  async function resolveDispute(dispute) {
     const newStatus = dispute.status === "resolved" ? "open" : "resolved";
     try {
-      const res = await fetch(`${API}/api/disputes/${dispute.dispute_id}`, {
+      const res = await apiFetch(`/api/disputes/${dispute.dispute_id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
       const data = await res.json();
@@ -104,11 +104,10 @@ async function resolveDispute(dispute) {
     }
   }
 
-async function decideChange(change, decision) {
+  async function decideChange(change, decision) {
     try {
-      const res = await fetch(`${API}/api/changes/${change.change_id}`, {
+      const res = await apiFetch(`/api/changes/${change.change_id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ decision }),
       });
       const data = await res.json();
@@ -119,14 +118,13 @@ async function decideChange(change, decision) {
     }
   }
 
-async function sendBroadcast(e) {
+  async function sendBroadcast(e) {
     e.preventDefault();
     setBroadcastMsg("");
     setError("");
     try {
-      const res = await fetch(`${API}/api/groups/${groupId}/broadcast`, {
+      const res = await apiFetch(`/api/groups/${groupId}/broadcast`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: broadcast }),
       });
       const data = await res.json();
@@ -186,22 +184,27 @@ async function sendBroadcast(e) {
         ) : (
           <ul className="group-list">
             {members.map((m) => (
-              <li key={m.member_id}>
-                <span>{m.rotation_order}. {m.full_name} ({m.phone_number})</span>
-                <button
-                  type="button"
-                  className={m.contribution_status === "paid" ? "status-btn paid" : "status-btn pending"}
-                  onClick={() => toggleContribution(m)}
-                >
-                  {m.contribution_status === "paid" ? "Paid ✓" : "Mark paid"}
-                </button>
+              <li key={m.member_id} style={{ opacity: m.status === "inactive" ? 0.5 : 1 }}>
+                <span>
+                  {m.rotation_order}. {m.full_name} ({m.phone_number})
+                  {m.status === "inactive" && <span className="badge" style={{ marginLeft: "8px" }}>exited</span>}
+                </span>
+                {m.status !== "inactive" && (
+                  <button
+                    type="button"
+                    className={m.contribution_status === "paid" ? "status-btn paid" : "status-btn pending"}
+                    onClick={() => toggleContribution(m)}
+                  >
+                    {m.contribution_status === "paid" ? "Paid ✓" : "Mark paid"}
+                  </button>
+                )}
               </li>
             ))}
           </ul>
         )}
       </section>
 
-<section className="panel" style={{ marginTop: "24px" }}>
+      <section className="panel" style={{ marginTop: "24px" }}>
         <h3>Disputes</h3>
         {disputes.length === 0 ? (
           <p className="subtitle">No disputes raised.</p>
@@ -223,7 +226,7 @@ async function sendBroadcast(e) {
         )}
       </section>
 
-<section className="panel" style={{ marginTop: "24px" }}>
+      <section className="panel" style={{ marginTop: "24px" }}>
         <h3>Membership requests</h3>
         {changes.length === 0 ? (
           <p className="subtitle">No membership change requests.</p>
@@ -241,9 +244,9 @@ async function sendBroadcast(e) {
                     <button type="button" className="status-btn paid" onClick={() => decideChange(c, "approved")}>Approve</button>
                     <button type="button" className="status-btn pending" onClick={() => decideChange(c, "rejected")}>Reject</button>
                   </span>
-) : (
+                ) : (
                   <span className={c.status === "approved" ? "status-btn paid" : "status-btn pending"}>
-                    {c.status === "approved" ? "Approved " : "Rejected "}
+                    {c.status === "approved" ? "Approved ✓" : "Rejected ✗"}
                   </span>
                 )}
               </li>
@@ -252,7 +255,7 @@ async function sendBroadcast(e) {
         )}
       </section>
 
-<section className="panel" style={{ marginTop: "24px" }}>
+      <section className="panel" style={{ marginTop: "24px" }}>
         <h3>Send a group message (SMS)</h3>
         {broadcastMsg && <p className="success-msg">{broadcastMsg}</p>}
         <form onSubmit={sendBroadcast}>
@@ -267,7 +270,6 @@ async function sendBroadcast(e) {
           <button type="submit">Send SMS</button>
         </form>
       </section>
-
     </div>
   );
 }
