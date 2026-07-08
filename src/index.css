@@ -43,3 +43,7 @@ textarea { padding: 10px 12px; margin-bottom: 16px; border: 1px solid #d1d5db; b
 .success-msg { color: #166534; background: #dcfce7; padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-bottom: 14px; }
 .logout-btn { width: auto; background: #fff; color: #2E5A88; border: 1px solid #2E5A88; padding: 6px 14px; font-size: 13px; border-radius: 6px; cursor: pointer; }
 .logout-btn:hover { background: #f0f4f8; }
+.summary-bar { display: flex; flex-wrap: wrap; gap: 16px; background: #f0f4f8; border-radius: 10px; padding: 16px; margin-bottom: 24px; }
+.summary-item { display: flex; flex-direction: column; min-width: 120px; }
+.summary-label { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
+.summary-value { font-size: 15px; font-weight: 600; color: #2E5A88; }

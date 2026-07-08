@@ -17,26 +17,32 @@ function GroupDetail() {
   const [changes, setChanges] = useState([]);
   const [broadcast, setBroadcast] = useState("");
   const [broadcastMsg, setBroadcastMsg] = useState("");
+  const [summary, setSummary] = useState(null);
+  const [pageLoading, setPageLoading] = useState(true);
 
   async function loadData() {
     try {
-      const [gRes, mRes, dRes, cRes] = await Promise.all([
+      const [gRes, mRes, dRes, cRes, sRes] = await Promise.all([
         apiFetch(`/api/groups/${groupId}`),
         apiFetch(`/api/groups/${groupId}/members`),
         apiFetch(`/api/groups/${groupId}/disputes`),
         apiFetch(`/api/groups/${groupId}/changes`),
+        apiFetch(`/api/groups/${groupId}/summary`),
       ]);
       const gData = await gRes.json();
       const mData = await mRes.json();
       const dData = await dRes.json();
       const cData = await cRes.json();
+      const sData = await sRes.json();
       if (gData.status === "success") setGroup(gData.group);
       if (mData.status === "success") setMembers(mData.members);
       if (dData.status === "success") setDisputes(dData.disputes);
       if (cData.status === "success") setChanges(cData.changes);
+      if (sData.status === "success") setSummary(sData.summary);
     } catch {
       setError("Could not load the group");
     }
+    setPageLoading(false);
   }
 
   useEffect(() => {
@@ -158,6 +164,13 @@ function GroupDetail() {
       </div>
     );
   }
+if (pageLoading) {
+    return (
+      <div className="dashboard">
+        <p className="subtitle">Loading group...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard">
@@ -175,7 +188,30 @@ function GroupDetail() {
           <span className="stat-label">Active members</span>
         </div>
       </div>
-
+{summary && (
+        <div className="summary-bar">
+          <div className="summary-item">
+            <span className="summary-label">Round</span>
+            <span className="summary-value">{summary.round ? `${summary.round} of ${summary.cycleLength}` : "—"}</span>
+          </div>
+          <div className="summary-item">
+            <span className="summary-label">Contributions</span>
+            <span className="summary-value">{summary.paid}/{summary.total} paid</span>
+          </div>
+          <div className="summary-item">
+            <span className="summary-label">Open disputes</span>
+            <span className="summary-value">{summary.openDisputes}</span>
+          </div>
+          <div className="summary-item">
+            <span className="summary-label">Next payout</span>
+            <span className="summary-value">
+              {summary.nextPayoutName
+                ? `${summary.nextPayoutName}${summary.nextPayoutDate ? " · " + new Date(summary.nextPayoutDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : ""}`
+                : "Cycle complete"}
+            </span>
+          </div>
+        </div>
+      )}
       <section className="panel">
         <h3>Add a member</h3>
         {error && <p className="error">{error}</p>}
