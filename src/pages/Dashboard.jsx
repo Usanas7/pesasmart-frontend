@@ -14,6 +14,7 @@ function Dashboard() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [startDate, setStartDate] = useState("");
+  const [stats, setStats] = useState(null);
 
   async function loadGroups() {
     if (!user) return;
@@ -25,11 +26,24 @@ function Dashboard() {
       setError("Could not load your groups");
     }
   }
-
+  loadStats();
   useEffect(() => {
     loadGroups();
+  
+
     // eslint-disable-next-line
   }, []);
+
+async function loadStats() {
+    if (!user) return;
+    try {
+      const res = await apiFetch(`/api/stats?createdBy=${user.user_id}`);
+      const data = await res.json();
+      if (data.status === "success") setStats(data.stats);
+    } catch {
+      /* stats are non-critical, ignore */
+    }
+  }
 
   function handleLogout() {
     localStorage.removeItem("pesasmart_user");
@@ -96,8 +110,20 @@ function Dashboard() {
 
       <div className="stat-cards">
         <div className="stat-card">
-          <span className="stat-number">{groups.length}</span>
+          <span className="stat-number">{stats ? stats.groups : groups.length}</span>
           <span className="stat-label">Groups</span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-number">{stats ? stats.members : "—"}</span>
+          <span className="stat-label">Members</span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-number">{stats ? stats.open_disputes : "—"}</span>
+          <span className="stat-label">Open disputes</span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-number">{stats ? stats.pending_requests : "—"}</span>
+          <span className="stat-label">Pending requests</span>
         </div>
       </div>
 
