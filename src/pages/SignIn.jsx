@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Box, Card, CardContent, TextField, Button, Typography, Alert, Stack } from "@mui/material";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
+import { Box, Card, CardContent, TextField, Button, Typography, Alert, Stack, Link } from "@mui/material";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -13,10 +13,7 @@ function SignIn() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
-    if (!/^\d{5}$/.test(pin)) {
-      setError("PIN must be exactly 5 digits");
-      return;
-    }
+    if (!/^\d{5}$/.test(pin)) { setError("PIN must be exactly 5 digits"); return; }
     try {
       const res = await fetch(`${API}/api/login`, {
         method: "POST",
@@ -44,34 +41,18 @@ function SignIn() {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             Sign in to manage your Ikimina groups
           </Typography>
-
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-
           <form onSubmit={handleSubmit}>
             <Stack spacing={2.5}>
-              <TextField
-                label="Phone number"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="078 123 4567"
-                fullWidth
-                required
-              />
-              <TextField
-                label="PIN"
-                type="password"
-                value={pin}
-                onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-                inputProps={{ inputMode: "numeric", maxLength: 5 }}
-                placeholder="5-digit PIN"
-                fullWidth
-                required
-              />
-              <Button type="submit" variant="contained" size="large" fullWidth>
-                Sign In
-              </Button>
+              <TextField label="Phone number" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="078 123 4567" fullWidth required />
+              <TextField label="PIN" type="password" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} inputProps={{ inputMode: "numeric", maxLength: 5 }} placeholder="5-digit PIN" fullWidth required />
+              <Button type="submit" variant="contained" size="large" fullWidth>Sign In</Button>
             </Stack>
           </form>
+          <Typography variant="body2" sx={{ mt: 2, textAlign: "center" }}>
+            New here?{" "}
+            <Link component={RouterLink} to="/signup" underline="hover">Create an account</Link>
+          </Typography>
         </CardContent>
       </Card>
     </Box>
