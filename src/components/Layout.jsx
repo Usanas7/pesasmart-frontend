@@ -30,7 +30,7 @@ function Layout({ children, active }) {
 
   const navItems = [
     { key: "dashboard", label: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
-    { key: "groups", label: "Groups", icon: <GroupsIcon />, path: "/dashboard" },
+    { key: "groups", label: "Groups", icon: <GroupsIcon />, path: "/groups" },
   ];
 
   const drawer = (
