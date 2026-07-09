@@ -10,8 +10,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import DownloadIcon from "@mui/icons-material/Download";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-
+import DeleteOutlineIcon from "@mui/icons-material/Delete";
 function computeEndDate(startDate, frequency, cycleLength) {
   if (!startDate || !cycleLength) return null;
   const start = new Date(startDate);
