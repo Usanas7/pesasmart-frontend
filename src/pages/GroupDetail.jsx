@@ -5,11 +5,12 @@ import Layout from "../components/Layout";
 import {
   Box, Typography, Button, Card, CardContent, TextField, Alert, Stack,
   Table, TableHead, TableBody, TableRow, TableCell, TableContainer, Paper,
-  Dialog, DialogTitle, DialogContent, DialogActions, Chip, Tabs, Tab, Divider
+  Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Chip, Tabs, Tab, Divider
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DownloadIcon from "@mui/icons-material/Download";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
 function computeEndDate(startDate, frequency, cycleLength) {
   if (!startDate || !cycleLength) return null;
@@ -41,6 +42,8 @@ function GroupDetail() {
   const [broadcastMsg, setBroadcastMsg] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const [confirm, setConfirm] = useState(null);
 
   async function loadData() {
     try {
@@ -121,9 +124,22 @@ function GroupDetail() {
     } catch { setError("Could not reach the server"); }
   }
 
-  async function sendBroadcast() {
+  function handleApprove(c) {
+    if (c.change_type === "exit") {
+      setConfirm({
+        title: "Approve exit request?",
+        message: `This will remove ${c.full_name} from the group's active rotation. This can't be undone.`,
+        confirmLabel: "Approve exit",
+        danger: true,
+        onConfirm: () => decideChange(c, "approved"),
+      });
+    } else {
+      decideChange(c, "approved");
+    }
+  }
+
+  async function doSendBroadcast() {
     setBroadcastMsg(""); setError("");
-    if (!broadcast.trim()) { setError("Message cannot be empty"); return; }
     try {
       const res = await apiFetch(`/api/groups/${groupId}/broadcast`, {
         method: "POST", body: JSON.stringify({ message: broadcast }),
@@ -134,13 +150,42 @@ function GroupDetail() {
     } catch { setError("Could not reach the server"); }
   }
 
+  function handleSendBroadcast() {
+    if (!broadcast.trim()) { setError("Message cannot be empty"); return; }
+    const activeCount = members.filter((m) => m.status !== "inactive").length;
+    setConfirm({
+      title: "Send SMS to all members?",
+      message: `This will send your message to all ${activeCount} active member(s) of this group.`,
+      confirmLabel: "Send SMS",
+      danger: false,
+      onConfirm: doSendBroadcast,
+    });
+  }
+
+  async function doDeleteGroup() {
+    try {
+      const res = await apiFetch(`/api/groups/${groupId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.status === "success") navigate("/groups");
+      else setError(data.message || "Could not delete the group");
+    } catch { setError("Could not reach the server"); }
+  }
+
+  function handleDeleteGroup() {
+    setConfirm({
+      title: "Delete this group?",
+      message: `This will permanently delete "${group?.name}" and all its members, disputes, and requests. This cannot be undone.`,
+      confirmLabel: "Delete group",
+      danger: true,
+      onConfirm: doDeleteGroup,
+    });
+  }
+
   function exportCSV() {
     const endDate = group ? computeEndDate(group.start_date, group.frequency, group.cycle_length) : null;
     const header = ["Position", "Name", "Phone", "Contribution", "Payout", "Status"];
     const rows = members.map((m) => [
-      m.rotation_order,
-      m.full_name,
-      m.phone_number,
+      m.rotation_order, m.full_name, m.phone_number,
       m.contribution_status === "paid" ? "Paid" : "Pending",
       m.payout_received ? "Received" : "Not yet",
       m.status === "inactive" ? "Exited" : "Active",
@@ -195,9 +240,15 @@ function GroupDetail() {
 
   return (
     <Layout active="groups">
-      <Button startIcon={<ArrowBackIcon />} onClick={() => navigate("/groups")} sx={{ mb: 1 }}>
-        Back to groups
-      </Button>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 1 }}>
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate("/groups")} sx={{ mb: 1 }}>
+          Back to groups
+        </Button>
+        <Button startIcon={<DeleteOutlineIcon />} color="error" onClick={handleDeleteGroup}>
+          Delete group
+        </Button>
+      </Box>
+
       <Typography variant="h5" fontWeight={800}>{group ? group.name : "Group"}</Typography>
       {group && (
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
@@ -351,7 +402,7 @@ function GroupDetail() {
                         <Chip label="Approved" color="success" size="small" />
                       ) : (
                         <Stack direction="row" spacing={1} alignItems="center">
-                          <Button size="small" variant="contained" color="success" onClick={() => decideChange(c, "approved")}>Approve</Button>
+                          <Button size="small" variant="contained" color="success" onClick={() => handleApprove(c)}>Approve</Button>
                           {c.status !== "rejected"
                             ? <Button size="small" variant="outlined" color="error" onClick={() => decideChange(c, "rejected")}>Reject</Button>
                             : <Chip label="Rejected" size="small" />}
@@ -373,7 +424,7 @@ function GroupDetail() {
                   onChange={(e) => setBroadcast(e.target.value)}
                   placeholder="Reminder: contributions for this week are due on Friday."
                   multiline minRows={3} fullWidth />
-                <Box><Button variant="contained" onClick={sendBroadcast}>Send SMS</Button></Box>
+                <Box><Button variant="contained" onClick={handleSendBroadcast}>Send SMS</Button></Box>
               </Stack>
             </Box>
           )}
@@ -393,6 +444,23 @@ function GroupDetail() {
           <Button onClick={() => setAddOpen(false)}>Cancel</Button>
           <Button variant="contained" onClick={handleAddMember} disabled={loading}>
             {loading ? "Adding..." : "Add Member"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={Boolean(confirm)} onClose={() => setConfirm(null)} maxWidth="xs" fullWidth>
+        <DialogTitle fontWeight={700}>{confirm?.title}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>{confirm?.message}</DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setConfirm(null)}>Cancel</Button>
+          <Button
+            variant="contained"
+            color={confirm?.danger ? "error" : "primary"}
+            onClick={() => { const fn = confirm?.onConfirm; setConfirm(null); if (fn) fn(); }}
+          >
+            {confirm?.confirmLabel || "Confirm"}
           </Button>
         </DialogActions>
       </Dialog>
