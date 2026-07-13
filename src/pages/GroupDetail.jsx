@@ -304,13 +304,12 @@ function GroupDetail() {
                 <TableContainer>
                   <Table size="small">
                     <TableHead>
-<TableRow sx={{ bgcolor: "#FBF7F0" }}>
-                        <TableCell sx={{ fontWeight: 700 }}>Ref</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Week</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Member</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Issue</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>TxID</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 700 }}>Status</TableCell>
+                      <TableRow sx={{ bgcolor: "#FBF7F0" }}>
+                        <TableCell sx={{ fontWeight: 700 }}>#</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Phone</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Contribution</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Payout</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
