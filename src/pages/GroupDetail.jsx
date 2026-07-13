@@ -362,6 +362,7 @@ function GroupDetail() {
                         <TableCell sx={{ fontWeight: 700 }}>Ref</TableCell>
                         <TableCell sx={{ fontWeight: 700 }}>Week</TableCell>
                         <TableCell sx={{ fontWeight: 700 }}>Member</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Issue</TableCell>
                         <TableCell sx={{ fontWeight: 700 }}>TxID</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 700 }}>Status</TableCell>
                       </TableRow>
