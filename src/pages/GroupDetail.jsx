@@ -22,6 +22,14 @@ function fmt(d) {
   return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
+const DISPUTE_LABELS = {
+  paid_not_recorded: "Paid but marked unpaid",
+  wrong_amount: "Wrong amount recorded",
+  payout_not_received: "Payout not received",
+  wrong_position: "Wrong rotation position",
+  other: "Other",
+};
+
 function GroupDetail() {
   const { groupId } = useParams();
   const navigate = useNavigate();
@@ -296,12 +304,13 @@ function GroupDetail() {
                 <TableContainer>
                   <Table size="small">
                     <TableHead>
-                      <TableRow sx={{ bgcolor: "#FBF7F0" }}>
-                        <TableCell sx={{ fontWeight: 700 }}>#</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Phone</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Contribution</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Payout</TableCell>
+<TableRow sx={{ bgcolor: "#FBF7F0" }}>
+                        <TableCell sx={{ fontWeight: 700 }}>Ref</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Week</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Member</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Issue</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>TxID</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 700 }}>Status</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -363,6 +372,11 @@ function GroupDetail() {
                           <TableCell>REF#{String(d.dispute_id).padStart(4, "0")}</TableCell>
                           <TableCell>{d.disputed_week}</TableCell>
                           <TableCell>{d.full_name}</TableCell>
+                          <TableCell>
+                            {d.dispute_type
+                              ? <Chip label={DISPUTE_LABELS[d.dispute_type] || d.dispute_type} size="small" />
+                              : "—"}
+                          </TableCell>
                           <TableCell>{d.momo_txid || "—"}</TableCell>
                           <TableCell align="right">
                             <Button size="small" variant={d.status === "resolved" ? "contained" : "outlined"}
