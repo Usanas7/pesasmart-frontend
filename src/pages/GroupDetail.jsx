@@ -40,6 +40,7 @@ function GroupDetail() {
   const [disputes, setDisputes] = useState([]);
   const [changes, setChanges] = useState([]);
   const [summary, setSummary] = useState(null);
+  const [activity, setActivity] = useState([]);
   const [pageLoading, setPageLoading] = useState(true);
   const [tab, setTab] = useState(0);
   const [addOpen, setAddOpen] = useState(false);
@@ -54,23 +55,26 @@ function GroupDetail() {
 
   async function loadData() {
     try {
-      const [gRes, mRes, dRes, cRes, sRes] = await Promise.all([
+      const [gRes, mRes, dRes, cRes, sRes, aRes] = await Promise.all([
         apiFetch(`/api/groups/${groupId}`),
         apiFetch(`/api/groups/${groupId}/members`),
         apiFetch(`/api/groups/${groupId}/disputes`),
         apiFetch(`/api/groups/${groupId}/changes`),
         apiFetch(`/api/groups/${groupId}/summary`),
+        apiFetch(`/api/groups/${groupId}/activity`),
       ]);
       const gData = await gRes.json();
       const mData = await mRes.json();
       const dData = await dRes.json();
       const cData = await cRes.json();
       const sData = await sRes.json();
+      const aData = await aRes.json();
       if (gData.status === "success") setGroup(gData.group);
       if (mData.status === "success") setMembers(mData.members);
       if (dData.status === "success") setDisputes(dData.disputes);
       if (cData.status === "success") setChanges(cData.changes);
       if (sData.status === "success") setSummary(sData.summary);
+      if (aData.status === "success") setActivity(aData.activity);
     } catch { setError("Could not load the group"); }
     setPageLoading(false);
   }
@@ -282,6 +286,8 @@ function GroupDetail() {
           <Tab label={`Disputes (${disputes.filter((d) => d.status === "open").length})`} />
           <Tab label={`Requests (${changes.filter((c) => c.status === "pending").length})`} />
           <Tab label="Messages" />
+                    <Tab label="History" />
+
         </Tabs>
 
         <CardContent sx={{ p: 3 }}>
@@ -428,7 +434,7 @@ function GroupDetail() {
             </Box>
           )}
 
-          {tab === 3 && (
+[          {tab === 3 && (
             <Box>
               <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>Send a group message (SMS)</Typography>
               {broadcastMsg && <Alert severity="success" sx={{ mb: 2 }}>{broadcastMsg}</Alert>}
@@ -441,6 +447,25 @@ function GroupDetail() {
               </Stack>
             </Box>
           )}
+
+{tab === 4 && (
+            <Box>
+              <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>Activity history</Typography>
+              {activity.length === 0 && (
+                <Typography color="text.secondary">No activity recorded yet.</Typography>
+              )}
+              {activity.map((a) => (
+                <Box key={a.log_id} sx={{ py: 1.2, borderBottom: "1px solid #F0E9DE" }}>
+                  <Typography sx={{ fontWeight: 600 }}>{a.description}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {a.affected_member ? `${a.affected_member} · ` : ""}
+                    {a.actor} · {new Date(a.created_at).toLocaleString()}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          )}]
+
         </CardContent>
       </Card>
 
