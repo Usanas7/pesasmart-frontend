@@ -74,7 +74,7 @@ function GroupDetail() {
       if (dData.status === "success") setDisputes(dData.disputes);
       if (cData.status === "success") setChanges(cData.changes);
       if (sData.status === "success") setSummary(sData.summary);
-      if (aData.status === "success") setActivity(aData.activity);
+      if (aData.status === "success") setActivity(aData.weeks);
     } catch { setError("Could not load the group"); }
     setPageLoading(false);
   }
@@ -216,6 +216,37 @@ function GroupDetail() {
     const a = document.createElement("a");
     a.href = url;
     a.download = `${(group?.name || "group").replace(/\s+/g, "_")}_members.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportHistoryCSV() {
+    const header = ["Week", "Date", "Member", "Details", "By"];
+    const rows = [];
+    for (const wk of activity) {
+      for (const a of wk.events) {
+        rows.push([
+          wk.week === "unscheduled" ? "" : wk.week,
+          new Date(a.created_at).toLocaleString(),
+          a.affected_member || "",
+          a.description,
+          a.actor,
+        ]);
+      }
+    }
+    const meta = [
+      [`Group:`, group?.name || ""],
+      [`History export:`, new Date().toLocaleString()],
+      [],
+    ];
+    const csv = [...meta, header, ...rows]
+      .map((r) => r.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${(group?.name || "group").replace(/\s+/g, "_")}_history.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -434,7 +465,7 @@ function GroupDetail() {
             </Box>
           )}
 
-         {tab === 3 && (
+[          {tab === 3 && (
             <Box>
               <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>Send a group message (SMS)</Typography>
               {broadcastMsg && <Alert severity="success" sx={{ mb: 2 }}>{broadcastMsg}</Alert>}
@@ -450,17 +481,38 @@ function GroupDetail() {
 
 {tab === 4 && (
             <Box>
-              <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>Activity history</Typography>
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                <Typography variant="h6" fontWeight={700}>Group history</Typography>
+                <Button variant="outlined" startIcon={<DownloadIcon />} onClick={exportHistoryCSV}
+                  disabled={activity.length === 0}>
+                  Download CSV
+                </Button>
+              </Box>
+
               {activity.length === 0 && (
                 <Typography color="text.secondary">No activity recorded yet.</Typography>
               )}
-              {activity.map((a) => (
-                <Box key={a.log_id} sx={{ py: 1.2, borderBottom: "1px solid #F0E9DE" }}>
-                  <Typography sx={{ fontWeight: 600 }}>{a.description}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {a.affected_member ? `${a.affected_member} · ` : ""}
-                    {a.actor} · {new Date(a.created_at).toLocaleString()}
+
+              {activity.map((wk) => (
+                <Box key={wk.week} sx={{ mb: 3 }}>
+                  <Typography sx={{ fontWeight: 700, color: "#2D7D5A", mb: 1 }}>
+                    {wk.week === "unscheduled" ? "Unscheduled" : `Week ${wk.week}`}
                   </Typography>
+                  <TableContainer>
+                    <Table size="small">
+                      <TableBody>
+                        {wk.events.map((a) => (
+                          <TableRow key={a.log_id}>
+                            <TableCell sx={{ whiteSpace: "nowrap", color: "#666", fontSize: 13, width: 90, verticalAlign: "top" }}>
+                              {new Date(a.created_at).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell sx={{ width: 140, verticalAlign: "top" }}>{a.affected_member || "—"}</TableCell>
+                            <TableCell>{a.description}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
                 </Box>
               ))}
             </Box>
