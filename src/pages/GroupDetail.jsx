@@ -465,7 +465,7 @@ function GroupDetail() {
             </Box>
           )}
 
-[          {tab === 3 && (
+        {tab === 3 && (
             <Box>
               <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>Send a group message (SMS)</Typography>
               {broadcastMsg && <Alert severity="success" sx={{ mb: 2 }}>{broadcastMsg}</Alert>}
